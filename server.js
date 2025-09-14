@@ -6,7 +6,7 @@ const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: "*" } // غيّرها فيما بعد لرابط موقعك
 });
 
 app.use(cors());
@@ -22,6 +22,7 @@ io.on("connection", (socket) => {
 
   socket.on("chat message", (msg) => {
     msg.id = socket.id;
+    msg.timestamp = Date.now(); // وقت الإرسال
     messages.push(msg);
     io.emit("chat message", msg);
   });
@@ -34,15 +35,10 @@ io.on("connection", (socket) => {
 // مسح الرسائل الأقدم من يوم
 setInterval(() => {
   const cutoff = Date.now() - (24 * 60 * 60 * 1000);
-  messages = messages.filter(m => {
-    const parts = m.time.split(":");
-    if(parts.length < 2) return true;
-    return true; // الوقت فقط للعرض هنا
-  });
+  messages = messages.filter(m => m.timestamp >= cutoff);
 }, 60000);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
